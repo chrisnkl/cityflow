@@ -7,7 +7,9 @@ CREATE TABLE permissions (
 -- 2. Πίνακας Ρόλων (Roles)
 CREATE TABLE roles (
                        id UUID PRIMARY KEY,
-                       name VARCHAR(255) NOT NULL UNIQUE
+                       name VARCHAR(255) NOT NULL UNIQUE,
+                       created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+                       updated_at TIMESTAMP WITH TIME ZONE NOT NULL
 );
 
 -- Ενδιάμεσος πίνακας Role <-> Permission (Many-to-Many)
@@ -22,7 +24,8 @@ CREATE TABLE users (
                        id UUID PRIMARY KEY,
                        email VARCHAR(255) NOT NULL UNIQUE,
                        password VARCHAR(255) NOT NULL,
-                       enabled BOOLEAN NOT NULL DEFAULT TRUE
+                       created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+                       updated_at TIMESTAMP WITH TIME ZONE NOT NULL
 );
 
 -- Ενδιάμεσος πίνακας User <-> Role (Many-to-Many)

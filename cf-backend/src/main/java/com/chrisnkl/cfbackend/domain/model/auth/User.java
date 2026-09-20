@@ -3,6 +3,7 @@ package com.chrisnkl.cfbackend.domain.model.auth;
 import com.chrisnkl.cfbackend.domain.model.report.Report;
 import lombok.*;
 
+import java.time.Instant;
 import java.util.Set;
 import java.util.UUID;
 
@@ -15,5 +16,7 @@ public class User {
     private String email;
     private Set<Role> roles;
     private Set<Report> reports;
+    private Instant createdAt;
+    private Instant updatedAt;
 
 }
