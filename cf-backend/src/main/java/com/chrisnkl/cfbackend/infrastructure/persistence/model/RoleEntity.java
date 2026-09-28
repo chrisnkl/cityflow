@@ -5,10 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
 
-import java.time.Instant;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
@@ -22,7 +20,7 @@ public class RoleEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "name", unique = true, nullable = false, length = 100)
+    @Column(name = "name", unique = true, nullable = false, length = 255)
     private String name;
 
     @ManyToMany(fetch = FetchType.LAZY)
@@ -33,13 +31,10 @@ public class RoleEntity {
     )
     private Set<PermissionEntity> permissions;
 
-    @CreatedDate
-    @Column(name = "created_at", updatable = false)
-    private Instant createdAt;
-
-    @LastModifiedDate
-    @Column(name = "updated_at")
-    private Instant updatedAt;
-
+    @ManyToMany(
+            mappedBy = "roles",
+            fetch = FetchType.LAZY
+    )
+    private Set<UserEntity> users = new HashSet<>();
 
 }

@@ -11,7 +11,7 @@ import java.util.UUID;
 @Table(name = "users")
 @AllArgsConstructor @NoArgsConstructor
 @Getter @Setter
-public class UserEntity {
+public class UserEntity extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -32,7 +32,7 @@ public class UserEntity {
     )
     private Set<RoleEntity> roles;
 
-    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "created_by", cascade = CascadeType.ALL)
     private Set<ReportEntity> reports;
 
 
