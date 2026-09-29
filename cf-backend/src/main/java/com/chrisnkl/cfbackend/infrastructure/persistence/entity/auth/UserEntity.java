@@ -1,5 +1,7 @@
-package com.chrisnkl.cfbackend.infrastructure.persistence.model;
+package com.chrisnkl.cfbackend.infrastructure.persistence.entity.auth;
 
+import com.chrisnkl.cfbackend.infrastructure.persistence.entity.BaseEntity;
+import com.chrisnkl.cfbackend.infrastructure.persistence.entity.report.ReportEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import lombok.*;

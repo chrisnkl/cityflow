@@ -1,5 +1,6 @@
-package com.chrisnkl.cfbackend.infrastructure.persistence.model;
+package com.chrisnkl.cfbackend.infrastructure.persistence.entity;
 
+import com.chrisnkl.cfbackend.infrastructure.persistence.entity.auth.UserEntity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;

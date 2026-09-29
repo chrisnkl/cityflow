@@ -1,4 +1,4 @@
-package com.chrisnkl.cfbackend.infrastructure.persistence.model;
+package com.chrisnkl.cfbackend.infrastructure.persistence.entity.auth;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

@@ -61,28 +61,45 @@ CREATE TABLE reports (
                          updated_by UUID REFERENCES users(id) ON DELETE SET NULL
 );
 
--- 6. Πίνακας Γεγονότων Ειδοποιήσεων (Notifications)
+-- =========================================================
+-- 6. Notifications
+-- =========================================================
+--
+-- Exactly ONE notification belongs to ONE report.
+-- report_id is UNIQUE => a report can only have one notification.
+--
+
 CREATE TABLE notifications (
                                id UUID PRIMARY KEY,
+
+                               report_id UUID NOT NULL UNIQUE
+                                   REFERENCES reports(id) ON DELETE CASCADE,
+
                                latitude DOUBLE PRECISION NOT NULL,
                                longitude DOUBLE PRECISION NOT NULL,
 
                                created_at TIMESTAMP WITH TIME ZONE NOT NULL,
-                               created_by UUID REFERENCES users(id) ON DELETE SET NULL
+                               updated_at TIMESTAMP WITH TIME ZONE NOT NULL
 );
 
--- Ενδιάμεσος πίνακας Notification <-> Report (Many-to-Many)
-CREATE TABLE notification_reports (
-                                      notification_id UUID NOT NULL REFERENCES notifications(id) ON DELETE CASCADE,
-                                      report_id UUID NOT NULL REFERENCES reports(id) ON DELETE CASCADE,
-                                      PRIMARY KEY (notification_id, report_id)
-);
 
--- 7. Πίνακας Προσωπικού Inbox Χρηστών (User Notifications)
+-- =========================================================
+-- 7. User Notifications
+-- =========================================================
+--
+-- One notification can be delivered to many users.
+-- Each delivery is represented by one UserNotification.
+--
+
 CREATE TABLE user_notifications (
                                     id UUID PRIMARY KEY,
-                                    notification_id UUID NOT NULL REFERENCES notifications(id) ON DELETE CASCADE,
-                                    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+
+                                    notification_id UUID NOT NULL
+                                        REFERENCES notifications(id) ON DELETE CASCADE,
+
+                                    user_id UUID NOT NULL
+                                        REFERENCES users(id) ON DELETE CASCADE,
+
                                     is_read BOOLEAN NOT NULL DEFAULT FALSE,
 
                                     created_at TIMESTAMP WITH TIME ZONE NOT NULL,

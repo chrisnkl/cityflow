@@ -14,6 +14,8 @@ public class Report {
     private UUID id;
     private Category category;
     private ReportStatus status;
+    private Double longitude;
+    private Double latitude;
     private String comments;
     private String photoUrl;
     private Double priority;

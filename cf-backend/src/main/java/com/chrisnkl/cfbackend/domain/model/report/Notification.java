@@ -13,9 +13,6 @@ public class Notification {
 
     private UUID id;
     private Set<Report> reports;
-    private Double longitude;
-    private Double latitude;
     private Instant createdAt;
-    private Instant createdBy;
 
 }
