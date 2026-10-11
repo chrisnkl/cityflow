@@ -1,4 +1,4 @@
-package com.chrisnkl.cfbackend.domain.model.auth;
+package com.chrisnkl.cfbackend.domain.enums;
 
 public enum PermissionCode {
 

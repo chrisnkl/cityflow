@@ -4,7 +4,6 @@ import com.chrisnkl.cfbackend.infrastructure.dto.request.auth.AuthRequest;
 import com.chrisnkl.cfbackend.infrastructure.dto.request.auth.RefreshTokenRequest;
 import com.chrisnkl.cfbackend.infrastructure.dto.response.auth.AuthResponse;
 import com.chrisnkl.cfbackend.infrastructure.helper.JwtHelper;
-import com.chrisnkl.cfbackend.infrastructure.helper.RoleManagementHelper;
 import com.chrisnkl.cfbackend.infrastructure.persistence.entity.auth.UserEntity;
 import com.chrisnkl.cfbackend.infrastructure.persistence.repository.JpaUserRepository;
 import io.jsonwebtoken.Claims;
@@ -20,6 +19,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -33,7 +33,6 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final UserDetailsService userDetailsService;
     private final JpaUserRepository userRepository;
-    private final RoleManagementHelper roleManagementHelper;
     private final PasswordEncoder passwordEncoder;
 
     public AuthResponse login(AuthRequest authRequest) {
@@ -57,6 +56,7 @@ public class AuthService {
         return jwtHelper.generateTokens(userDetails.getUsername(), authorities);
     }
 
+    @Transactional
     public AuthResponse register(AuthRequest authRequest) {
         log.info("AuthService.register received a register request: {}", authRequest.email());
 
@@ -71,7 +71,13 @@ public class AuthService {
 
         userRepository.save(newUser);
 
-        return jwtHelper.generateTokens(authRequest.email(), roleManagementHelper.defaultRolesWithPermissions());
+        UserDetails loadUser = userDetailsService.loadUserByUsername(newUser.getEmail());
+
+        Set<String> authorities = loadUser.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toSet());
+
+        return jwtHelper.generateTokens(loadUser.getUsername(), authorities);
     }
 
     public AuthResponse refreshTokens(RefreshTokenRequest refreshTokenRequest) {

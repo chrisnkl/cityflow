@@ -1,8 +1,8 @@
 package com.chrisnkl.cfbackend.domain.model.auth;
 
+import com.chrisnkl.cfbackend.domain.enums.PermissionCode;
 import lombok.*;
 
-import java.time.Instant;
 import java.util.UUID;
 
 @AllArgsConstructor @NoArgsConstructor
