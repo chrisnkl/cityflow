@@ -20,8 +20,8 @@ public class PermissionEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "name", unique = true, nullable = false, length = 255)
-    private String name;
+    @Column(name = "code", unique = true, nullable = false, length = 255)
+    private String code;
 
     @ManyToMany(mappedBy = "permissions", fetch = FetchType.LAZY)
     private Set<RoleEntity> roles = new HashSet<>();

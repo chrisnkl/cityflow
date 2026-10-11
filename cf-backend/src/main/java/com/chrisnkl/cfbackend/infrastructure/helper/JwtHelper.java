@@ -80,35 +80,13 @@ public class JwtHelper implements JwtActions {
     }
 
     @Override
-    public AuthResponse refreshTokens(String refreshToken) {
-        return null;
-    }
-
-    @Override
     public Claims parseAccessToken(String token) {
-
-        Claims claims = Jwts.parser()
-                .verifyWith(signingKey)
-                .requireIssuer(properties.issuer())
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
-
-        if (!TokenType.ACCESS.name().equalsIgnoreCase(claims.get("type", String.class))) {
-            throw new JwtException("Invalid token type: expected ACCESS type.");
-        }
-
-        if (claims.getSubject() == null || claims.getSubject().isBlank()) {
-            throw new JwtException("Invalid token: subject (email) is missing.");
-        }
-
-        return claims;
-
+        return parseToken(token, TokenType.ACCESS);
     }
 
     @Override
     public Claims parseRefreshToken(String token) {
-        return null;
+        return parseToken(token, TokenType.REFRESH);
     }
 
     @Override
@@ -119,6 +97,25 @@ public class JwtHelper implements JwtActions {
     @Override
     public boolean validateRefreshToken(String token) {
         return validateTokenType(token, TokenType.REFRESH);
+    }
+
+    private Claims parseToken(String token, TokenType tokenType) {
+        Claims claims = Jwts.parser()
+                .verifyWith(signingKey)
+                .requireIssuer(properties.issuer())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+
+        if (!tokenType.name().equalsIgnoreCase(claims.get("type", String.class))) {
+            throw new JwtException("Invalid token type: expected " + tokenType.name() + " type.");
+        }
+
+        if (claims.getSubject() == null || claims.getSubject().isBlank()) {
+            throw new JwtException("Invalid token: subject (email) is missing.");
+        }
+
+        return claims;
     }
 
     // Generate access token and refresh token with the given email and authorities, using the specified expiration durations.

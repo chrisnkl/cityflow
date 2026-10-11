@@ -27,9 +27,12 @@ public class RoleEntity {
     @JoinTable(
             name = "role_permissions",
             joinColumns = @JoinColumn(name = "role_id"),
-            inverseJoinColumns = @JoinColumn(name = "permission_id")
+            inverseJoinColumns = @JoinColumn(name = "permission_id"),
+            uniqueConstraints = @UniqueConstraint(
+                    columnNames = {"role_id", "permission_id"}
+            )
     )
-    private Set<PermissionEntity> permissions;
+    private Set<PermissionEntity> permissions = new HashSet<>();
 
     @ManyToMany(
             mappedBy = "roles",

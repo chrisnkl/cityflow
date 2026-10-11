@@ -1,0 +1,18 @@
+package com.chrisnkl.cfbackend.domain.model.auth;
+
+public enum PermissionCode {
+
+    REPORT_ISSUE,
+    RECEIVE_NOTIFICATIONS,
+    VIEW_PROFILE,
+    VIEW_OWN_REPORTS,
+    VIEW_STATISTICS,
+    VIEW_ALL_REPORTS,
+    VALIDATE_REPORT,
+    REJECT_REPORT,
+    UPDATE_REPORT_STATUS,
+    MANAGE_SYSTEM_SETTINGS,
+    MANAGE_USERS,
+    MANAGE_CATEGORIES
+
+}
