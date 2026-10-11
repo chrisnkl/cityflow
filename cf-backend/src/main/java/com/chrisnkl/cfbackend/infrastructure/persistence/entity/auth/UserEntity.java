@@ -34,7 +34,7 @@ public class UserEntity extends BaseEntity {
     )
     private Set<RoleEntity> roles;
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "created_by", cascade = CascadeType.ALL)
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "createdBy", cascade = CascadeType.ALL)
     private Set<ReportEntity> reports;
 
 

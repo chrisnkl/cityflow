@@ -50,6 +50,8 @@ CREATE TABLE reports (
                          id UUID PRIMARY KEY,
                          category_id UUID NOT NULL REFERENCES categories(id) ON DELETE RESTRICT,
                          status VARCHAR(50) NOT NULL,
+                         latitude DOUBLE PRECISION NOT NULL,
+                         longitude DOUBLE PRECISION NOT NULL,
                          comments TEXT,
                          photo_url VARCHAR(512),
                          priority DOUBLE PRECISION,
@@ -74,9 +76,6 @@ CREATE TABLE notifications (
 
                                report_id UUID NOT NULL UNIQUE
                                    REFERENCES reports(id) ON DELETE CASCADE,
-
-                               latitude DOUBLE PRECISION NOT NULL,
-                               longitude DOUBLE PRECISION NOT NULL,
 
                                created_at TIMESTAMP WITH TIME ZONE NOT NULL,
                                updated_at TIMESTAMP WITH TIME ZONE NOT NULL
