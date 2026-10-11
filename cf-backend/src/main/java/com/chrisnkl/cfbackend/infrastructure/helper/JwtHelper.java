@@ -80,6 +80,11 @@ public class JwtHelper implements JwtActions {
     }
 
     @Override
+    public AuthResponse refreshTokens(String refreshToken) {
+        return null;
+    }
+
+    @Override
     public Claims parseAccessToken(String token) {
 
         Claims claims = Jwts.parser()
@@ -99,6 +104,11 @@ public class JwtHelper implements JwtActions {
 
         return claims;
 
+    }
+
+    @Override
+    public Claims parseRefreshToken(String token) {
+        return null;
     }
 
     @Override

@@ -1,6 +1,7 @@
 package com.chrisnkl.cfbackend.infrastructure.service.auth;
 
 import com.chrisnkl.cfbackend.infrastructure.dto.request.auth.AuthRequest;
+import com.chrisnkl.cfbackend.infrastructure.dto.request.auth.RefreshTokenRequest;
 import com.chrisnkl.cfbackend.infrastructure.dto.response.auth.AuthResponse;
 import com.chrisnkl.cfbackend.infrastructure.helper.JwtHelper;
 import lombok.RequiredArgsConstructor;
@@ -49,4 +50,8 @@ public class AuthService {
         return jwtHelper.generateTokens(authRequest.email(), null);
     }
 
+    public AuthResponse refreshTokens(RefreshTokenRequest refreshTokenRequest) {
+        log.info("AuthService.refreshTokens received refresh token request with refresh token: {}", refreshTokenRequest.refreshToken());
+        return jwtHelper.refreshTokens(refreshTokenRequest.refreshToken());
+    }
 }

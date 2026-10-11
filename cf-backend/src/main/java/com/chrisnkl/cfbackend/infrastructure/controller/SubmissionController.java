@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class SubmissionController {
 
     private final CreateReportUseCase createReportUseCase;
-    private final GetReportsUseCase getReportsUseCase;
+//    private final GetReportsUseCase getReportsUseCase;
 
     @PostMapping
     public ResponseEntity<?> createReportSubmission(@RequestBody @Valid CreateReportRequest request) {

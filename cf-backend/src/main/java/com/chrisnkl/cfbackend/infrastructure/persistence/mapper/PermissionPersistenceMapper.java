@@ -10,7 +10,7 @@ public interface PermissionPersistenceMapper {
 
     @Mapping(target = "roles", ignore = true)
     PermissionEntity toEntity(Permission permission);
-
+    
     Permission toDomain(PermissionEntity entity);
 
 }

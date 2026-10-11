@@ -19,5 +19,14 @@ services:
     ports:
       - "9092:9092"
 
+  sonarqube:
+    image: sonarqube:26.9.0.129388-community
+    container_name: cf-backend-sonarqube
+    ports:
+      - "9000:9000"
+    volumes:
+      - sonarqube-data:/opt/sonarqube/data
+
 volumes:
     cf-database-data:
+    sonarqube-data:
