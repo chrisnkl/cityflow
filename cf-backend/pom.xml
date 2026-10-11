@@ -28,6 +28,15 @@
 
     <!-- Plugins -->
     <sonar.maven.plugin>5.8.0.7211</sonar.maven.plugin>
+    <jacoco.version>0.8.15</jacoco.version>
+
+    <!-- SonarQube -->
+    <sonar.organization>com.chrisnkl:cf-backend</sonar.organization>
+    <sonar.projectKey>cf-backend</sonar.projectKey>
+    <sonar.projectName>cf-backend</sonar.projectName>
+    <sonar.host.url>http://localhost:9000</sonar.host.url>
+    <sonar.token>sqp_aac92ecb54ca5d4ed5c73ef3f6c4bace418de6d7</sonar.token>
+    <sonar.coverage.jacoco.xmlReportPaths>target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
 
   </properties>
 
@@ -242,6 +251,28 @@
                 </path>
               </annotationProcessorPaths>
             </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- JaCoCo Engine for Test Data Generation -->
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>${jacoco.version}</version>
+        <executions>
+          <execution>
+            <id>prepare-agent</id>
+            <goals>
+              <goal>prepare-agent</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>report</id>
+            <phase>test</phase>
+            <goals>
+              <goal>report</goal>
+            </goals>
           </execution>
         </executions>
       </plugin>
