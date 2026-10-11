@@ -2,7 +2,7 @@ package com.chrisnkl.cfbackend.infrastructure.controller;
 
 import com.chrisnkl.cfbackend.application.port.in.report.CreateReportUseCase;
 import com.chrisnkl.cfbackend.application.port.in.report.GetReportsUseCase;
-import com.chrisnkl.cfbackend.infrastructure.dto.CreateReportRequest;
+import com.chrisnkl.cfbackend.infrastructure.dto.request.report.CreateReportRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

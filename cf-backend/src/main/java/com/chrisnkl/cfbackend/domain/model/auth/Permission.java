@@ -12,7 +12,5 @@ public class Permission {
 
     private UUID id;
     private String name;
-    private Instant createdAt;
-    private Instant updatedAt;
 
 }

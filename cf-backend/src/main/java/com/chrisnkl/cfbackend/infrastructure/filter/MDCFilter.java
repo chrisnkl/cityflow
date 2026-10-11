@@ -1,4 +1,4 @@
-package com.chrisnkl.cfbackend.infrastructure.filter.filter;
+package com.chrisnkl.cfbackend.infrastructure.filter;
 
 import com.chrisnkl.cfbackend.common.header.Header;
 import jakarta.servlet.FilterChain;

@@ -6,11 +6,12 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MappedSuperclass;
 import lombok.Getter;
+import lombok.Setter;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.LastModifiedBy;
 
 @MappedSuperclass
-@Getter
+@Getter @Setter
 public class AuditedEntity extends BaseEntity {
 
     @CreatedBy

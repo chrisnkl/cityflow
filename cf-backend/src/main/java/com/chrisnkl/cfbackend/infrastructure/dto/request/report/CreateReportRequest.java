@@ -1,4 +1,4 @@
-package com.chrisnkl.cfbackend.infrastructure.dto;
+package com.chrisnkl.cfbackend.infrastructure.dto.request.report;
 
 import com.chrisnkl.cfbackend.domain.exception.report.ReportCreationException;
 

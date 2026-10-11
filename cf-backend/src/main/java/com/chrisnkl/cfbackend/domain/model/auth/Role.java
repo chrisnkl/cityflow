@@ -14,7 +14,5 @@ public class Role {
     private UUID id;
     private String name;
     private Set<Permission> permissions;
-    private Instant createdAt;
-    private Instant updatedAt;
 
 }

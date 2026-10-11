@@ -7,7 +7,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum Header {
 
-    REQUEST_ID("X-REQUEST-ID");
+    REQUEST_ID("X-REQUEST-ID"),
+    AUTHORIZATION("Authorization");
 
     private final String value;
 
