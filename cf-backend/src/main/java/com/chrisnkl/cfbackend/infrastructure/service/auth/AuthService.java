@@ -1,5 +1,6 @@
 package com.chrisnkl.cfbackend.infrastructure.service.auth;
 
+import com.chrisnkl.cfbackend.domain.exception.auth.UserAlreadyExistsException;
 import com.chrisnkl.cfbackend.infrastructure.dto.request.auth.AuthRequest;
 import com.chrisnkl.cfbackend.infrastructure.dto.request.auth.RefreshTokenRequest;
 import com.chrisnkl.cfbackend.infrastructure.dto.response.auth.AuthResponse;
@@ -17,6 +18,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,7 +49,7 @@ public class AuthService {
 
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
 
-        assert userDetails!=null;
+        if (userDetails == null) throw new UsernameNotFoundException("Invalid email or password");
 
         Set<String> authorities = userDetails.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
@@ -61,7 +63,7 @@ public class AuthService {
         log.info("AuthService.register received a register request: {}", authRequest.email());
 
         if (userRepository.findByEmail(authRequest.email()).isPresent()) {
-            throw new BadCredentialsException("Email is already registered");
+            throw new UserAlreadyExistsException("Email is already registered");
         }
 
         UserEntity newUser = UserEntity.builder()

@@ -4,9 +4,13 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 @Getter
-@RequiredArgsConstructor
 public class HttpBackendException extends BackendException {
 
     private final int status;
+
+    public HttpBackendException(int status, String message) {
+        this.status = status;
+        super(message);
+    }
 
 }
