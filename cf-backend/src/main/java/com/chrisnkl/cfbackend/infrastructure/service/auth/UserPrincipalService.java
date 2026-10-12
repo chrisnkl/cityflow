@@ -28,15 +28,18 @@ public class UserPrincipalService implements UserDetailsService {
         UserEntity user = userRepository.findByEmailWithRolesAndPermissions(username).orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + username));
         Set<SimpleGrantedAuthority> authorities = new HashSet<>();
 
-        user.getRoles().forEach(role -> {
-            authorities.add(new SimpleGrantedAuthority(role.getName()));
+        if (user.getRoles() != null && !user.getRoles().isEmpty()) {
 
-            role.getPermissions().forEach(permission ->
-                    authorities.add(
-                            new SimpleGrantedAuthority(permission.getCode())
-                    )
-            );
-        });
+            user.getRoles().forEach(role -> {
+                authorities.add(new SimpleGrantedAuthority(role.getName()));
+
+                role.getPermissions().forEach(permission ->
+                        authorities.add(
+                                new SimpleGrantedAuthority(permission.getCode())
+                        )
+                );
+            });
+        }
 
         return User.builder()
 
