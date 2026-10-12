@@ -1,0 +1,46 @@
+package com.chrisnkl.cfbackend.infrastructure.persistence.repository;
+
+import com.chrisnkl.cfbackend.infrastructure.persistence.entity.report.ReportEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import java.util.UUID;
+
+public interface JpaReportRepository extends JpaRepository<ReportEntity, UUID> {
+
+    @Query(
+            value = """
+                SELECT r
+                FROM ReportEntity r
+                JOIN FETCH r.category c
+                WHERE 6371.0 * ACOS(
+                    COS(RADIANS(:latitude)) * COS(RADIANS(r.latitude)) *
+                    COS(RADIANS(r.longitude) - RADIANS(:longitude)) +
+                    SIN(RADIANS(:latitude)) * SIN(RADIANS(r.latitude))
+                ) <= COALESCE(c.radius, 5.0)
+                ORDER BY 6371.0 * ACOS(
+                    COS(RADIANS(:latitude)) * COS(RADIANS(r.latitude)) *
+                    COS(RADIANS(r.longitude) - RADIANS(:longitude)) +
+                    SIN(RADIANS(:latitude)) * SIN(RADIANS(r.latitude))
+                )
+                """,
+            countQuery = """
+                SELECT COUNT(r)
+                FROM ReportEntity r
+                JOIN r.category c
+                WHERE 6371.0 * ACOS(
+                    COS(RADIANS(:latitude)) * COS(RADIANS(r.latitude)) *
+                    COS(RADIANS(r.longitude) - RADIANS(:longitude)) +
+                    SIN(RADIANS(:latitude)) * SIN(RADIANS(r.latitude))
+                ) <= COALESCE(c.radius, 5.0)
+                """
+    )
+    Page<ReportEntity> findNearbyReports(
+            @Param("latitude") double latitude,
+            @Param("longitude") double longitude,
+            Pageable pageable
+    );
+}
