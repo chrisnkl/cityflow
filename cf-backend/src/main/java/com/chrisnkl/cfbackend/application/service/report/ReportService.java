@@ -6,7 +6,9 @@ import com.chrisnkl.cfbackend.application.pagination.PageResult;
 import com.chrisnkl.cfbackend.application.port.in.report.CreateReportUseCase;
 import com.chrisnkl.cfbackend.application.port.in.report.GetReportsUseCase;
 import com.chrisnkl.cfbackend.application.port.out.report.FindNearbyReportsPort;
+import com.chrisnkl.cfbackend.domain.exception.HttpBackendException;
 import com.chrisnkl.cfbackend.domain.model.report.Report;
+import org.springframework.http.HttpStatus;
 
 public class ReportService implements CreateReportUseCase, GetReportsUseCase {
 
@@ -22,22 +24,22 @@ public class ReportService implements CreateReportUseCase, GetReportsUseCase {
     }
 
     @Override
-    public PageResult<Report> getReports(double latitude, double longitude, PageRequest pageRequest) {
+    public PageResult<Report> getReports(String email, double latitude, double longitude, PageRequest pageRequest) {
         validateCoordinates(latitude, longitude);
 
-        return findNearbyReportsPort.findNearbyReports(latitude, longitude, pageRequest);
+        return findNearbyReportsPort.findNearbyReports(email, latitude, longitude, pageRequest);
     }
 
     private void validateCoordinates(double latitude, double longitude) {
         if (!Double.isFinite(latitude) || !Double.isFinite(longitude)) {
-            throw new IllegalArgumentException("Coordinates must be finite numbers.");
+            throw new HttpBackendException(HttpStatus.BAD_REQUEST.value(), "Coordinates must be finite numbers.");
         }
         if (latitude < -90 || latitude > 90) {
-            throw new IllegalArgumentException("Latitude must be between -90 and 90 degrees.");
+            throw new HttpBackendException(HttpStatus.BAD_REQUEST.value(),"Latitude must be between -90 and 90 degrees.");
         }
 
         if (longitude < -180 || longitude > 180) {
-            throw new IllegalArgumentException("Longitude must be between -180 and 180 degrees.");
+            throw new HttpBackendException(HttpStatus.BAD_REQUEST.value(),"Longitude must be between -180 and 180 degrees.");
         }
     }
 }

@@ -21,6 +21,7 @@ public interface JpaReportRepository extends JpaRepository<ReportEntity, UUID> {
                     COS(RADIANS(r.longitude) - RADIANS(:longitude)) +
                     SIN(RADIANS(:latitude)) * SIN(RADIANS(r.latitude))
                 ) <= COALESCE(c.radius, 5.0)
+                AND (:email IS NULL OR r.createdBy.email = :email)
                 ORDER BY 6371.0 * ACOS(
                     COS(RADIANS(:latitude)) * COS(RADIANS(r.latitude)) *
                     COS(RADIANS(r.longitude) - RADIANS(:longitude)) +
@@ -36,9 +37,11 @@ public interface JpaReportRepository extends JpaRepository<ReportEntity, UUID> {
                     COS(RADIANS(r.longitude) - RADIANS(:longitude)) +
                     SIN(RADIANS(:latitude)) * SIN(RADIANS(r.latitude))
                 ) <= COALESCE(c.radius, 5.0)
+                AND (:email IS NULL OR r.createdBy.email = :email)
                 """
     )
     Page<ReportEntity> findNearbyReports(
+            @Param("email") String email,
             @Param("latitude") double latitude,
             @Param("longitude") double longitude,
             Pageable pageable

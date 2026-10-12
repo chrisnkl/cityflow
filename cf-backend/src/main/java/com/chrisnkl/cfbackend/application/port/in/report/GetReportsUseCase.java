@@ -6,6 +6,6 @@ import com.chrisnkl.cfbackend.application.pagination.PageResult;
 
 public interface GetReportsUseCase {
 
-    PageResult<Report> getReports(double latitude, double longitude, PageRequest pageRequest);
+    PageResult<Report> getReports(String email, double latitude, double longitude, PageRequest pageRequest);
 
 }

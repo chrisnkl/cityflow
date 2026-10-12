@@ -6,5 +6,5 @@ import com.chrisnkl.cfbackend.application.pagination.PageResult;
 
 public interface FindNearbyReportsPort {
 
-    PageResult<Report> findNearbyReports(double latitude, double longitude, PageRequest pageRequest);
+    PageResult<Report> findNearbyReports(String email, double latitude, double longitude, PageRequest pageRequest);
 }

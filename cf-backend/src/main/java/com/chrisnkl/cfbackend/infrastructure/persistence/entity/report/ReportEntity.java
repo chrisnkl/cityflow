@@ -32,7 +32,6 @@ public class ReportEntity extends AuditedEntity {
     @Column(name = "latitude", nullable = false)
     private double latitude;
 
-    @Lob
     @Column(name = "comments", columnDefinition = "TEXT")
     private String comments;
 

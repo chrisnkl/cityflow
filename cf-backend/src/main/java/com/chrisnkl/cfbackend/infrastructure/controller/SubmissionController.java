@@ -16,6 +16,8 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -32,14 +34,20 @@ public class SubmissionController {
         return ResponseEntity.ok("");
     }
 
-    @GetMapping("/reports")
+    @GetMapping
+    @PreAuthorize("hasAuthority('VIEW_ALL_REPORTS') or hasAuthority('VIEW_OWN_REPORTS')")
     public ResponseEntity<ApiResponse<ReportPageResponse>> getReports(
             @RequestParam @DecimalMin("-90.0") @DecimalMax("90.0") double latitude,
             @RequestParam @DecimalMin("-180.0") @DecimalMax("180.0") double longitude,
             @RequestParam(defaultValue = "0") @Min(0) int page,
-            @RequestParam(defaultValue = "20") @Min(1) @Max(PageRequest.MAX_PAGE_SIZE) int size
+            @RequestParam(defaultValue = "20") @Min(1) @Max(PageRequest.MAX_PAGE_SIZE) int size,
+            Authentication authentication
     ) {
+
+        String email = authentication.getName();
+
         PageResult<Report> reports = getReportsUseCase.getReports(
+                email,
                 latitude,
                 longitude,
                 new PageRequest(page, size)

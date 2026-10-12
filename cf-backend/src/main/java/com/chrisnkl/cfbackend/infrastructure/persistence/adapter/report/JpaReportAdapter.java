@@ -19,9 +19,10 @@ public class JpaReportAdapter implements FindNearbyReportsPort {
     private final ReportPersistenceMapper reportPersistenceMapper;
 
     @Override
-    public PageResult<Report> findNearbyReports(double latitude, double longitude, PageRequest pageRequest) {
+    public PageResult<Report> findNearbyReports(String email, double latitude, double longitude, PageRequest pageRequest) {
         Page<ReportEntity> results =
                 reportRepository.findNearbyReports(
+                        email,
                         latitude,
                         longitude,
                         org.springframework.data.domain.PageRequest.of(pageRequest.page(), pageRequest.size())
