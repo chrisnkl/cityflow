@@ -1,4 +1,4 @@
-package com.chrisnkl.cfbackend.application.pagination;
+package com.chrisnkl.cfbackend.application.result.pagination;
 
 import java.util.List;
 

@@ -4,7 +4,7 @@ import com.chrisnkl.cfbackend.infrastructure.common.ApiResponse;
 import com.chrisnkl.cfbackend.infrastructure.dto.request.auth.AuthRequest;
 import com.chrisnkl.cfbackend.infrastructure.dto.request.auth.RefreshTokenRequest;
 import com.chrisnkl.cfbackend.infrastructure.dto.response.auth.AuthResponse;
-import com.chrisnkl.cfbackend.infrastructure.service.auth.AuthService;
+import com.chrisnkl.cfbackend.infrastructure.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

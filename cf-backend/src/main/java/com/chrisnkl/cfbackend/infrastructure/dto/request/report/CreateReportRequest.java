@@ -1,19 +1,26 @@
 package com.chrisnkl.cfbackend.infrastructure.dto.request.report;
 
-import com.chrisnkl.cfbackend.domain.exception.report.ReportCreationException;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 import java.util.UUID;
 
 public record CreateReportRequest(
 
+        @NotNull
         UUID categoryId,
+
+        @NotBlank
         String comments,
-        String photoUrl
 
-) {
+        String photoUrl,
 
-   public CreateReportRequest {
-       if (categoryId == null || comments == null || photoUrl == null) throw new ReportCreationException("Failed to create report: categoryId, comments, and photoUrl must not be null");
-   }
+        @DecimalMin("-90.0") @DecimalMax("90.0")
+        double latitude,
 
-}
+        @DecimalMin("-180.0") @DecimalMax("180.0")
+        double longitude
+
+) { }

@@ -1,10 +1,10 @@
-package com.chrisnkl.cfbackend.application.pagination;
+package com.chrisnkl.cfbackend.application.command.report;
 
-public record PageRequest(int page, int size) {
+public record PageCommand(int page, int size) {
 
     public static final int MAX_PAGE_SIZE = 100;
 
-    public PageRequest {
+    public PageCommand {
         if (page < 0) {
             throw new IllegalArgumentException("Page index cannot be negative.");
         }

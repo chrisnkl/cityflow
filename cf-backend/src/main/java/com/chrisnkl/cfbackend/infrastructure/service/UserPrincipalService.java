@@ -1,4 +1,4 @@
-package com.chrisnkl.cfbackend.infrastructure.service.auth;
+package com.chrisnkl.cfbackend.infrastructure.service;
 
 import com.chrisnkl.cfbackend.infrastructure.persistence.repository.JpaUserRepository;
 import com.chrisnkl.cfbackend.infrastructure.persistence.entity.auth.UserEntity;

@@ -6,6 +6,9 @@ public record CreateReportCommand(
 
         UUID categoryId,
         String comments,
-        String photoUrl
+        String photoUrl,
+        double latitude,
+        double longitude,
+        String createdBy
 
 ) { }

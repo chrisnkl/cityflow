@@ -5,12 +5,13 @@ import com.chrisnkl.cfbackend.infrastructure.persistence.entity.AuditedEntity;
 import com.chrisnkl.cfbackend.infrastructure.persistence.entity.notification.NotificationEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.util.UUID;
 
 @Entity
 @Table(name = "reports")
-@Getter
+@Getter @Setter
 public class ReportEntity extends AuditedEntity {
 
     @Id

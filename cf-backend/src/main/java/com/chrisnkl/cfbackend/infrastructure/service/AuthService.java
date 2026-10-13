@@ -1,4 +1,4 @@
-package com.chrisnkl.cfbackend.infrastructure.service.auth;
+package com.chrisnkl.cfbackend.infrastructure.service;
 
 import com.chrisnkl.cfbackend.domain.exception.auth.UserAlreadyExistsException;
 import com.chrisnkl.cfbackend.infrastructure.dto.request.auth.AuthRequest;

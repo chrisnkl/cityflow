@@ -1,4 +1,4 @@
-package com.chrisnkl.cfbackend.config;
+package com.chrisnkl.cfbackend.infrastructure.config;
 
 import com.chrisnkl.cfbackend.infrastructure.filter.JwtFilter;
 import org.springframework.beans.factory.annotation.Value;
