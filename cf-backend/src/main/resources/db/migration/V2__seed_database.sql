@@ -98,8 +98,7 @@ BEGIN
             'VIEW_STATISTICS',
             'VIEW_ALL_REPORTS',
             'VALIDATE_REPORT',
-            'REJECT_REPORT',
-            'UPDATE_REPORT_STATUS'
+            'REJECT_REPORT'
         );
 
         INSERT INTO role_permissions (role_id, permission_id)

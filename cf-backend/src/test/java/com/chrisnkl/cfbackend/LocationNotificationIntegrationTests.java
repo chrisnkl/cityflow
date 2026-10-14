@@ -1,6 +1,10 @@
 package com.chrisnkl.cfbackend;
 
 import com.chrisnkl.cfbackend.application.result.notification.ReportNotificationResult;
+import com.chrisnkl.cfbackend.application.command.report.ReviewReportCommand;
+import com.chrisnkl.cfbackend.application.port.in.report.ReviewReportUseCase;
+import com.chrisnkl.cfbackend.domain.exception.HttpBackendException;
+import com.chrisnkl.cfbackend.domain.enums.ValidationAction;
 import com.chrisnkl.cfbackend.domain.model.report.Category;
 import com.chrisnkl.cfbackend.domain.model.report.Report;
 import com.chrisnkl.cfbackend.domain.model.report.ReportStatus;
@@ -8,17 +12,22 @@ import com.chrisnkl.cfbackend.domain.model.auth.User;
 import com.chrisnkl.cfbackend.infrastructure.adapter.out.persistance.JpaReportAdapter;
 import com.chrisnkl.cfbackend.infrastructure.adapter.out.persistance.JpaNotificationAdapter;
 import com.chrisnkl.cfbackend.infrastructure.persistence.entity.auth.UserEntity;
+import com.chrisnkl.cfbackend.infrastructure.persistence.entity.notification.NotificationEntity;
+import com.chrisnkl.cfbackend.infrastructure.persistence.entity.notification.UserNotificationEntity;
 import com.chrisnkl.cfbackend.infrastructure.persistence.entity.report.CategoryEntity;
 import com.chrisnkl.cfbackend.infrastructure.persistence.entity.report.ReportEntity;
 import com.chrisnkl.cfbackend.infrastructure.persistence.repository.JpaCategoryRepository;
 import com.chrisnkl.cfbackend.infrastructure.persistence.repository.JpaNotificationRepository;
 import com.chrisnkl.cfbackend.infrastructure.persistence.repository.JpaReportRepository;
+import com.chrisnkl.cfbackend.infrastructure.persistence.repository.JpaUserNotificationRepository;
 import com.chrisnkl.cfbackend.infrastructure.persistence.repository.JpaUserRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 import java.util.List;
 import java.util.UUID;
@@ -26,6 +35,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -45,7 +55,16 @@ class LocationNotificationIntegrationTests {
     private JpaNotificationRepository notificationRepository;
 
     @Autowired
+    private JpaUserNotificationRepository userNotificationRepository;
+
+    @Autowired
     private JpaReportAdapter reportAdapter;
+
+    @Autowired
+    private ReviewReportUseCase reviewReportUseCase;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     @Autowired
     private JpaNotificationAdapter notificationAdapter;
@@ -105,6 +124,74 @@ class LocationNotificationIntegrationTests {
 
         assertEquals(reportId, notificationRepository.findByReport_Id(reportId).orElseThrow()
                 .getReport().getId());
+    }
+
+    @Test
+    void creatingReportWithMissingCategoryReturnsBadRequest() {
+        UserEntity owner = user("missing-category-owner@example.com");
+        UUID missingCategoryId = UUID.randomUUID();
+        Report report = Report.builder()
+                .id(UUID.randomUUID())
+                .category(Category.builder().id(missingCategoryId).build())
+                .status(ReportStatus.PENDING)
+                .latitude(37.9838)
+                .longitude(23.7275)
+                .createdBy(User.builder().email(owner.getEmail()).build())
+                .build();
+
+        HttpBackendException exception = assertThrows(HttpBackendException.class,
+                () -> reportAdapter.createReport(report));
+
+        assertEquals(400, exception.getStatus());
+        assertEquals("Category not found", exception.getMessage());
+    }
+
+    @Test
+    void validationActionUpdatesReportStatus() {
+        UserEntity owner = user("validation-owner@example.com");
+        CategoryEntity category = categoryRepository.save(category());
+        UUID reportId = UUID.randomUUID();
+        reportAdapter.createReport(Report.builder()
+                .id(reportId)
+                .category(Category.builder().id(category.getId()).build())
+                .status(ReportStatus.PENDING)
+                .latitude(37.9838)
+                .longitude(23.7275)
+                .createdBy(User.builder().email(owner.getEmail()).build())
+                .build());
+
+        reviewReportUseCase.reviewReport(new ReviewReportCommand(
+                reportId, ValidationAction.VALIDATE, ReportStatus.IN_PROGRESS));
+
+        assertEquals(ReportStatus.IN_PROGRESS, reportRepository.findById(reportId).orElseThrow().getStatus());
+    }
+
+    @Test
+    void rejectActionDeletesReportAndItsNotification() {
+        UserEntity owner = user("rejection-owner@example.com");
+        CategoryEntity category = categoryRepository.save(category());
+        UUID reportId = UUID.randomUUID();
+        reportAdapter.createReport(Report.builder()
+                .id(reportId)
+                .category(Category.builder().id(category.getId()).build())
+                .status(ReportStatus.PENDING)
+                .latitude(37.9838)
+                .longitude(23.7275)
+                .createdBy(User.builder().email(owner.getEmail()).build())
+                .build());
+        NotificationEntity notification = notificationRepository.findByReport_Id(reportId).orElseThrow();
+        UserNotificationEntity userNotification = userNotificationRepository.save(
+                new UserNotificationEntity(null, notification, owner, false));
+        UUID userNotificationId = userNotification.getId();
+        entityManager.flush();
+        entityManager.clear();
+
+        reviewReportUseCase.reviewReport(new ReviewReportCommand(
+                reportId, ValidationAction.REJECT, null));
+
+        assertFalse(reportRepository.existsById(reportId));
+        assertFalse(notificationRepository.findByReport_Id(reportId).isPresent());
+        assertFalse(userNotificationRepository.existsById(userNotificationId));
     }
 
     private UserEntity user(String email) {

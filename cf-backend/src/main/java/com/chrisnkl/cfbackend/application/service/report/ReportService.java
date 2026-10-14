@@ -2,16 +2,20 @@ package com.chrisnkl.cfbackend.application.service.report;
 
 import com.chrisnkl.cfbackend.application.command.report.CreateReportCommand;
 import com.chrisnkl.cfbackend.application.command.report.PageCommand;
+import com.chrisnkl.cfbackend.application.command.report.ReviewReportCommand;
 import com.chrisnkl.cfbackend.application.result.pagination.PageResult;
 import com.chrisnkl.cfbackend.application.port.in.report.CreateReportUseCase;
 import com.chrisnkl.cfbackend.application.port.in.report.GetReportImageUseCase;
 import com.chrisnkl.cfbackend.application.port.in.report.GetReportsUseCase;
+import com.chrisnkl.cfbackend.application.port.in.report.ReviewReportUseCase;
 import com.chrisnkl.cfbackend.application.port.out.report.CreateReportPort;
 import com.chrisnkl.cfbackend.application.port.out.report.FindReportPort;
 import com.chrisnkl.cfbackend.application.port.out.report.FindNearbyReportsPort;
+import com.chrisnkl.cfbackend.application.port.out.report.ManageReportPort;
 import com.chrisnkl.cfbackend.application.port.out.report.ReportImageStoragePort;
 import com.chrisnkl.cfbackend.application.result.report.CreateReportResult;
 import com.chrisnkl.cfbackend.application.result.report.ReportImageResult;
+import com.chrisnkl.cfbackend.domain.enums.ValidationAction;
 import com.chrisnkl.cfbackend.domain.exception.HttpBackendException;
 import com.chrisnkl.cfbackend.domain.model.auth.User;
 import com.chrisnkl.cfbackend.domain.model.report.Category;
@@ -21,23 +25,26 @@ import org.springframework.http.HttpStatus;
 
 import java.util.UUID;
 
-public class ReportService implements CreateReportUseCase, GetReportsUseCase, GetReportImageUseCase {
+public class ReportService implements CreateReportUseCase, GetReportsUseCase, GetReportImageUseCase, ReviewReportUseCase {
 
     private final FindNearbyReportsPort findNearbyReportsPort;
     private final CreateReportPort createReportPort;
     private final ReportImageStoragePort reportImageStoragePort;
     private final FindReportPort findReportPort;
+    private final ManageReportPort manageReportPort;
 
     public ReportService(
             FindNearbyReportsPort findNearbyReportsPort,
             CreateReportPort createReportPort,
             ReportImageStoragePort reportImageStoragePort,
-            FindReportPort findReportPort
+            FindReportPort findReportPort,
+            ManageReportPort manageReportPort
     ) {
         this.findNearbyReportsPort = findNearbyReportsPort;
         this.createReportPort = createReportPort;
         this.reportImageStoragePort = reportImageStoragePort;
         this.findReportPort = findReportPort;
+        this.manageReportPort = manageReportPort;
     }
 
     @Override
@@ -106,6 +113,23 @@ public class ReportService implements CreateReportUseCase, GetReportsUseCase, Ge
         if (report.getPhotoUrl() == null) throw new HttpBackendException(HttpStatus.NOT_FOUND.value(), "Report has no image.");
 
         return reportImageStoragePort.download(report.getPhotoUrl());
+    }
+
+    @Override
+    public void reviewReport(ReviewReportCommand command) {
+        if (command.validationAction() == ValidationAction.VALIDATE) {
+            if (command.status() == null || command.status() == ReportStatus.REJECTED) {
+                throw new HttpBackendException(HttpStatus.BAD_REQUEST.value(),
+                        "A valid non-rejected report status is required.");
+            }
+            manageReportPort.updateStatus(command.reportId(), command.status());
+            return;
+        }
+        if (command.validationAction() == ValidationAction.REJECT) {
+            manageReportPort.deleteReport(command.reportId());
+            return;
+        }
+        throw new HttpBackendException(HttpStatus.BAD_REQUEST.value(), "Validation action is required.");
     }
 
     private void validateImage(byte[] imageBytes, String contentType) {

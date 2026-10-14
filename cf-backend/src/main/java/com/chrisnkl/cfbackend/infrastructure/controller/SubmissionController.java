@@ -3,7 +3,9 @@ package com.chrisnkl.cfbackend.infrastructure.controller;
 import com.chrisnkl.cfbackend.application.port.in.report.CreateReportUseCase;
 import com.chrisnkl.cfbackend.application.port.in.report.GetReportsUseCase;
 import com.chrisnkl.cfbackend.application.port.in.report.GetReportImageUseCase;
+import com.chrisnkl.cfbackend.application.port.in.report.ReviewReportUseCase;
 import com.chrisnkl.cfbackend.application.command.report.PageCommand;
+import com.chrisnkl.cfbackend.application.command.report.ReviewReportCommand;
 import com.chrisnkl.cfbackend.application.result.pagination.PageResult;
 import com.chrisnkl.cfbackend.application.result.report.CreateReportResult;
 import com.chrisnkl.cfbackend.application.result.report.ReportImageResult;
@@ -11,6 +13,7 @@ import com.chrisnkl.cfbackend.domain.enums.PermissionCode;
 import com.chrisnkl.cfbackend.domain.model.report.Report;
 import com.chrisnkl.cfbackend.infrastructure.common.ApiResponse;
 import com.chrisnkl.cfbackend.infrastructure.dto.request.report.CreateReportRequest;
+import com.chrisnkl.cfbackend.infrastructure.dto.request.report.ReviewReportRequest;
 import com.chrisnkl.cfbackend.infrastructure.dto.response.report.ReportPageResponse;
 import com.chrisnkl.cfbackend.infrastructure.mapper.CreateReportCommandMapper;
 import com.chrisnkl.cfbackend.infrastructure.mapper.ReportResponseMapper;
@@ -41,6 +44,7 @@ public class SubmissionController {
     private final CreateReportUseCase createReportUseCase;
     private final GetReportsUseCase getReportsUseCase;
     private final GetReportImageUseCase getReportImageUseCase;
+    private final ReviewReportUseCase reviewReportUseCase;
     private final ReportResponseMapper reportResponseMapper;
     private final CreateReportCommandMapper createReportCommandMapper;
 
@@ -56,9 +60,8 @@ public class SubmissionController {
     ) {
 
         boolean canViewAll = authentication.getAuthorities().stream().anyMatch(authority -> Objects.equals(authority.getAuthority(), PermissionCode.VIEW_ALL_REPORTS.name()));
-        if (email == null || email.isBlank()) email = authentication.getName();
 
-        if (!canViewAll && !authentication.getName().equalsIgnoreCase(email)) throw new AccessDeniedException("User " + authentication.getName() + " tried accessing another user's reports.");
+        if (!canViewAll && (email != null && !email.isBlank()) && !authentication.getName().equalsIgnoreCase(email)) throw new AccessDeniedException("User " + authentication.getName() + " tried accessing another user's reports.");
 
         PageResult<Report> reports = getReportsUseCase.getReports(
                 email,
@@ -92,6 +95,19 @@ public class SubmissionController {
         );
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.created("Report created successfully", result));
+    }
+
+    @PostMapping("/validation")
+    @PreAuthorize("(#p0.validationAction == T(com.chrisnkl.cfbackend.domain.enums.ValidationAction).VALIDATE and hasAuthority('VALIDATE_REPORT')) or (#p0.validationAction == T(com.chrisnkl.cfbackend.domain.enums.ValidationAction).REJECT and hasAuthority('REJECT_REPORT'))")
+    public ResponseEntity<ApiResponse<Void>> reviewReport(
+            @Valid @RequestBody ReviewReportRequest request
+    ) {
+        reviewReportUseCase.reviewReport(new ReviewReportCommand(
+                request.reportId(),
+                request.validationAction(),
+                request.status()
+        ));
+        return ResponseEntity.ok(ApiResponse.success("Report review action completed"));
     }
 
     @GetMapping("/{reportId}/photo")

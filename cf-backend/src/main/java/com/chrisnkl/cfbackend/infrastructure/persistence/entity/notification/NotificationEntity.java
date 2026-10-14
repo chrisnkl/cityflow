@@ -25,7 +25,7 @@ public class NotificationEntity extends BaseEntity {
     @JoinColumn(name = "report_id", nullable = false, unique = true)
     private ReportEntity report;
 
-    @OneToMany(mappedBy = "notification", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "notification", fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
     private Set<UserNotificationEntity> reports;
 
 }

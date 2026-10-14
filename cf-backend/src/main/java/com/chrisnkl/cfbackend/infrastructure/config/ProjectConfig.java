@@ -5,6 +5,7 @@ import com.chrisnkl.cfbackend.application.port.out.report.CreateReportPort;
 import com.chrisnkl.cfbackend.application.port.out.report.GetCategoriesPort;
 import com.chrisnkl.cfbackend.application.port.out.report.ReportImageStoragePort;
 import com.chrisnkl.cfbackend.application.port.out.report.FindReportPort;
+import com.chrisnkl.cfbackend.application.port.out.report.ManageReportPort;
 import com.chrisnkl.cfbackend.application.service.report.CategoryService;
 import com.chrisnkl.cfbackend.application.service.notification.NotificationService;
 import com.chrisnkl.cfbackend.application.service.report.ReportService;
@@ -30,9 +31,11 @@ public class ProjectConfig implements WebMvcConfigurer {
             FindNearbyReportsPort findNearbyReportsPort,
             CreateReportPort createReportPort,
             ReportImageStoragePort reportImageStoragePort,
-            FindReportPort findReportPort
+            FindReportPort findReportPort,
+            ManageReportPort manageReportPort
     ) {
-        return new ReportService(findNearbyReportsPort, createReportPort, reportImageStoragePort, findReportPort);
+        return new ReportService(findNearbyReportsPort, createReportPort, reportImageStoragePort, findReportPort,
+                manageReportPort);
     }
 
     @Bean

@@ -7,6 +7,7 @@ import com.chrisnkl.cfbackend.application.result.report.GetCategoriesResult;
 import com.chrisnkl.cfbackend.domain.exception.HttpBackendException;
 import com.chrisnkl.cfbackend.domain.model.report.Category;
 import com.chrisnkl.cfbackend.domain.model.report.Report;
+import com.chrisnkl.cfbackend.domain.model.report.ReportStatus;
 import com.chrisnkl.cfbackend.infrastructure.persistence.entity.auth.UserEntity;
 import com.chrisnkl.cfbackend.infrastructure.persistence.entity.notification.NotificationEntity;
 import com.chrisnkl.cfbackend.infrastructure.persistence.entity.report.CategoryEntity;
@@ -29,7 +30,8 @@ import java.util.UUID;
 
 @Repository
 @RequiredArgsConstructor
-public class JpaReportAdapter implements FindNearbyReportsPort, CreateReportPort, GetCategoriesPort, FindReportPort {
+public class JpaReportAdapter implements FindNearbyReportsPort, CreateReportPort, GetCategoriesPort, FindReportPort,
+        ManageReportPort {
 
     private final JpaReportRepository reportRepository;
     private final JpaCategoryRepository categoryRepository;
@@ -42,8 +44,9 @@ public class JpaReportAdapter implements FindNearbyReportsPort, CreateReportPort
     @Override
     @Transactional
     public UUID createReport(Report report) {
-        CategoryEntity category = categoryRepository.findByIdAndEnabledTrue(report.getCategory().getId())
-                .orElseThrow(() -> new HttpBackendException(HttpStatus.NOT_FOUND.value(), "Enabled report category not found."));
+        CategoryEntity category = categoryRepository.findById(report.getCategory().getId())
+                .filter(CategoryEntity::isEnabled)
+                .orElseThrow(() -> new HttpBackendException(HttpStatus.BAD_REQUEST.value(), "Category not found"));
         UserEntity createdBy = userRepository.findByEmail(report.getCreatedBy().getEmail())
                 .orElseThrow(() -> new HttpBackendException(HttpStatus.NOT_FOUND.value(), "Report creator not found."));
 
@@ -60,6 +63,23 @@ public class JpaReportAdapter implements FindNearbyReportsPort, CreateReportPort
     @Transactional(readOnly = true)
     public java.util.Optional<Report> findById(UUID reportId) {
         return reportRepository.findById(reportId).map(reportPersistenceMapper::toDomain);
+    }
+
+    @Override
+    @Transactional
+    public void updateStatus(UUID reportId, ReportStatus status) {
+        ReportEntity report = reportRepository.findById(reportId)
+                .orElseThrow(() -> new HttpBackendException(HttpStatus.NOT_FOUND.value(), "Report not found."));
+        report.setStatus(status);
+        reportRepository.save(report);
+    }
+
+    @Override
+    @Transactional
+    public void deleteReport(UUID reportId) {
+        ReportEntity report = reportRepository.findById(reportId)
+                .orElseThrow(() -> new HttpBackendException(HttpStatus.NOT_FOUND.value(), "Report not found."));
+        reportRepository.delete(report);
     }
 
     @Override
