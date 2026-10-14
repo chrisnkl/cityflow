@@ -10,13 +10,11 @@ import com.chrisnkl.cfbackend.domain.exception.HttpBackendException;
 import com.chrisnkl.cfbackend.domain.model.report.Category;
 import com.chrisnkl.cfbackend.domain.model.report.Report;
 import com.chrisnkl.cfbackend.infrastructure.persistence.entity.auth.UserEntity;
-import com.chrisnkl.cfbackend.infrastructure.persistence.entity.event.OutboxEventEntity;
 import com.chrisnkl.cfbackend.infrastructure.persistence.entity.report.CategoryEntity;
 import com.chrisnkl.cfbackend.infrastructure.persistence.entity.report.ReportEntity;
 import com.chrisnkl.cfbackend.infrastructure.persistence.mapper.CategoryPersistenceMapper;
 import com.chrisnkl.cfbackend.infrastructure.persistence.mapper.ReportPersistenceMapper;
 import com.chrisnkl.cfbackend.infrastructure.persistence.repository.JpaCategoryRepository;
-import com.chrisnkl.cfbackend.infrastructure.persistence.repository.JpaOutboxEventRepository;
 import com.chrisnkl.cfbackend.infrastructure.persistence.repository.JpaReportRepository;
 import com.chrisnkl.cfbackend.infrastructure.persistence.repository.JpaUserRepository;
 import lombok.RequiredArgsConstructor;
@@ -36,7 +34,6 @@ public class JpaReportAdapter implements FindNearbyReportsPort, CreateReportPort
     private final JpaCategoryRepository categoryRepository;
     private final JpaUserRepository userRepository;
 
-    private final ReportCreatedEventPort reportCreatedEventPort;
 
     private final ReportPersistenceMapper reportPersistenceMapper;
     private final CategoryPersistenceMapper categoryPersistenceMapper;
@@ -53,11 +50,9 @@ public class JpaReportAdapter implements FindNearbyReportsPort, CreateReportPort
         entity.setCategory(category);
         entity.setCreatedBy(createdBy);
 
-        // Save both report and outbox event to avoid dual write problem
         ReportEntity savedReport = reportRepository.save(entity);
-        reportCreatedEventPort.save(new ReportCreatedEvent(reportPersistenceMapper.toDomain(savedReport)));
 
-        return report.getId();
+        return savedReport.getId();
     }
 
     @Override
