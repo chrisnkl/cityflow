@@ -30,3 +30,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+__azurite_**
+Azurite

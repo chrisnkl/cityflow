@@ -1,7 +1,7 @@
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 
-LABEL authors="chchn"
+LABEL authors="chrisnkl"
 
 COPY target/*.jar app.jar
 EXPOSE 8080

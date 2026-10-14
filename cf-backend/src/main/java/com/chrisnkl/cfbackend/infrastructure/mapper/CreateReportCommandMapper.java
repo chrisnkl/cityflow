@@ -9,5 +9,12 @@ import org.mapstruct.Mapping;
 public interface CreateReportCommandMapper {
 
     @Mapping(target = "createdBy", source = "createdBy")
-    CreateReportCommand toCommand(CreateReportRequest request, String createdBy);
+    @Mapping(target = "photoBytes", source = "photoBytes")
+    @Mapping(target = "photoContentType", source = "photoContentType")
+    CreateReportCommand toCommand(
+            CreateReportRequest request,
+            String createdBy,
+            byte[] photoBytes,
+            String photoContentType
+    );
 }

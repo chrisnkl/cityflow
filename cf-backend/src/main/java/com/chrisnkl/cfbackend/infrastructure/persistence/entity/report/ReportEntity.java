@@ -15,7 +15,6 @@ import java.util.UUID;
 public class ReportEntity extends AuditedEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
 
@@ -36,7 +35,7 @@ public class ReportEntity extends AuditedEntity {
     @Column(name = "comments", columnDefinition = "TEXT")
     private String comments;
 
-    @Column(name = "photo_url")
+    @Column(name = "photo_url", length = 512)
     private String photoUrl;
 
     @Column(name = "priority")

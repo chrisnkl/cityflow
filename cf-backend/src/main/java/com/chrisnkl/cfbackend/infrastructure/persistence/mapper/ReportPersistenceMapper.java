@@ -11,7 +11,6 @@ public interface ReportPersistenceMapper {
     @Mapping(target = "notification", ignore = true)
     ReportEntity toEntity(Report report);
 
-    @Mapping(target = "id", ignore = true)
     @Mapping(target = "category", ignore = true)
     @Mapping(target = "createdBy", ignore = true)
     @Mapping(target = "updatedBy", ignore = true)

@@ -14,5 +14,6 @@ public interface ReportResponseMapper {
 
     @Mapping(target = "categoryId", source = "category.id")
     @Mapping(target = "categoryName", source = "category.name")
+    @Mapping(target = "photoUrl", expression = "java(report.getPhotoUrl() == null ? null : \"/api/v1/secure/submission/\" + report.getId() + \"/photo\")")
     ReportResponse toResponse(Report report);
 }

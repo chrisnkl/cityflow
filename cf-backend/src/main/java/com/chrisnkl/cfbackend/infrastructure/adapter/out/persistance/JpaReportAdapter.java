@@ -1,20 +1,22 @@
-package com.chrisnkl.cfbackend.infrastructure.persistence.adapter.report;
+package com.chrisnkl.cfbackend.infrastructure.adapter.out.persistance;
 
-import com.chrisnkl.cfbackend.application.port.out.report.CreateReportPort;
-import com.chrisnkl.cfbackend.application.port.out.report.FindNearbyReportsPort;
+import com.chrisnkl.cfbackend.application.port.out.report.*;
 import com.chrisnkl.cfbackend.application.command.report.PageCommand;
-import com.chrisnkl.cfbackend.application.port.out.report.GetCategoriesPort;
 import com.chrisnkl.cfbackend.application.result.pagination.PageResult;
 import com.chrisnkl.cfbackend.application.result.report.GetCategoriesResult;
+import com.chrisnkl.cfbackend.domain.enums.EventType;
+import com.chrisnkl.cfbackend.domain.event.ReportCreatedEvent;
 import com.chrisnkl.cfbackend.domain.exception.HttpBackendException;
 import com.chrisnkl.cfbackend.domain.model.report.Category;
 import com.chrisnkl.cfbackend.domain.model.report.Report;
 import com.chrisnkl.cfbackend.infrastructure.persistence.entity.auth.UserEntity;
+import com.chrisnkl.cfbackend.infrastructure.persistence.entity.event.OutboxEventEntity;
 import com.chrisnkl.cfbackend.infrastructure.persistence.entity.report.CategoryEntity;
 import com.chrisnkl.cfbackend.infrastructure.persistence.entity.report.ReportEntity;
 import com.chrisnkl.cfbackend.infrastructure.persistence.mapper.CategoryPersistenceMapper;
 import com.chrisnkl.cfbackend.infrastructure.persistence.mapper.ReportPersistenceMapper;
 import com.chrisnkl.cfbackend.infrastructure.persistence.repository.JpaCategoryRepository;
+import com.chrisnkl.cfbackend.infrastructure.persistence.repository.JpaOutboxEventRepository;
 import com.chrisnkl.cfbackend.infrastructure.persistence.repository.JpaReportRepository;
 import com.chrisnkl.cfbackend.infrastructure.persistence.repository.JpaUserRepository;
 import lombok.RequiredArgsConstructor;
@@ -28,11 +30,14 @@ import java.util.UUID;
 
 @Repository
 @RequiredArgsConstructor
-public class JpaReportAdapter implements FindNearbyReportsPort, CreateReportPort, GetCategoriesPort {
+public class JpaReportAdapter implements FindNearbyReportsPort, CreateReportPort, GetCategoriesPort, FindReportPort {
 
     private final JpaReportRepository reportRepository;
     private final JpaCategoryRepository categoryRepository;
     private final JpaUserRepository userRepository;
+
+    private final ReportCreatedEventPort reportCreatedEventPort;
+
     private final ReportPersistenceMapper reportPersistenceMapper;
     private final CategoryPersistenceMapper categoryPersistenceMapper;
 
@@ -47,7 +52,18 @@ public class JpaReportAdapter implements FindNearbyReportsPort, CreateReportPort
         ReportEntity entity = reportPersistenceMapper.toNewEntity(report);
         entity.setCategory(category);
         entity.setCreatedBy(createdBy);
-        return reportRepository.save(entity).getId();
+
+        // Save both report and outbox event to avoid dual write problem
+        ReportEntity savedReport = reportRepository.save(entity);
+        reportCreatedEventPort.save(new ReportCreatedEvent(reportPersistenceMapper.toDomain(savedReport)));
+
+        return report.getId();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public java.util.Optional<Report> findById(UUID reportId) {
+        return reportRepository.findById(reportId).map(reportPersistenceMapper::toDomain);
     }
 
     @Override
@@ -73,7 +89,7 @@ public class JpaReportAdapter implements FindNearbyReportsPort, CreateReportPort
     @Override
     public GetCategoriesResult getCategories(boolean enabled, double radius) {
 
-        List<CategoryEntity> results = categoryRepository.findByEnabledAndRadius(enabled, radius);
+        List<CategoryEntity> results = categoryRepository.findByEnabledAndRadiusLessThanEqual(enabled, radius);
 
         List<Category> categories = categoryPersistenceMapper.toDomain(results);
 

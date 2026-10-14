@@ -15,8 +15,6 @@ public record CreateReportRequest(
         @NotBlank
         String comments,
 
-        String photoUrl,
-
         @DecimalMin("-90.0") @DecimalMax("90.0")
         double latitude,
 

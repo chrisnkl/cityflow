@@ -2,9 +2,11 @@ package com.chrisnkl.cfbackend.infrastructure.controller;
 
 import com.chrisnkl.cfbackend.application.port.in.report.CreateReportUseCase;
 import com.chrisnkl.cfbackend.application.port.in.report.GetReportsUseCase;
+import com.chrisnkl.cfbackend.application.port.in.report.GetReportImageUseCase;
 import com.chrisnkl.cfbackend.application.command.report.PageCommand;
 import com.chrisnkl.cfbackend.application.result.pagination.PageResult;
 import com.chrisnkl.cfbackend.application.result.report.CreateReportResult;
+import com.chrisnkl.cfbackend.application.result.report.ReportImageResult;
 import com.chrisnkl.cfbackend.domain.enums.PermissionCode;
 import com.chrisnkl.cfbackend.domain.model.report.Report;
 import com.chrisnkl.cfbackend.infrastructure.common.ApiResponse;
@@ -18,11 +20,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -34,6 +40,7 @@ public class SubmissionController {
 
     private final CreateReportUseCase createReportUseCase;
     private final GetReportsUseCase getReportsUseCase;
+    private final GetReportImageUseCase getReportImageUseCase;
     private final ReportResponseMapper reportResponseMapper;
     private final CreateReportCommandMapper createReportCommandMapper;
 
@@ -67,17 +74,43 @@ public class SubmissionController {
 
     @PostMapping
     @PreAuthorize("hasAuthority('REPORT_ISSUE')")
-    public ResponseEntity<ApiResponse<UUID>> createReport(
-            @Valid @RequestBody CreateReportRequest request,
+    public ResponseEntity<ApiResponse<CreateReportResult>> createReport(
+            @Valid @RequestPart("report") CreateReportRequest request,
+            @RequestPart(value = "photo", required = false) MultipartFile photo,
             Authentication authentication
-    ) {
+    ) throws IOException {
 
+        byte[] photoBytes = photo == null ? null : photo.getBytes();
+        String photoContentType = photo == null ? null : photo.getContentType();
         CreateReportResult result = createReportUseCase.createReport(
-                createReportCommandMapper.toCommand(request, authentication.getName())
+                createReportCommandMapper.toCommand(
+                        request,
+                        authentication.getName(),
+                        photoBytes,
+                        photoContentType
+                )
         );
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.created("Report created successfully", result.reportId()));
+                .body(ApiResponse.created("Report created successfully", result));
     }
 
+    @GetMapping("/{reportId}/photo")
+    @PreAuthorize("hasAuthority('VIEW_ALL_REPORTS') or hasAuthority('VIEW_OWN_REPORTS')")
+    public ResponseEntity<byte[]> getReportImage(
+            @PathVariable UUID reportId,
+            Authentication authentication
+    ) {
+        boolean canViewAll = authentication.getAuthorities().stream()
+                .anyMatch(authority -> Objects.equals(authority.getAuthority(), PermissionCode.VIEW_ALL_REPORTS.name()));
+        ReportImageResult image = getReportImageUseCase.getReportImage(
+                reportId,
+                authentication.getName(),
+                canViewAll
+        );
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(image.contentType()))
+                .header(HttpHeaders.CACHE_CONTROL, "private, max-age=300")
+                .body(image.content());
+    }
 
 }

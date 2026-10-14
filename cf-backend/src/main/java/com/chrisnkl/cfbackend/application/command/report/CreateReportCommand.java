@@ -6,7 +6,8 @@ public record CreateReportCommand(
 
         UUID categoryId,
         String comments,
-        String photoUrl,
+        byte[] photoBytes,
+        String photoContentType,
         double latitude,
         double longitude,
         String createdBy
