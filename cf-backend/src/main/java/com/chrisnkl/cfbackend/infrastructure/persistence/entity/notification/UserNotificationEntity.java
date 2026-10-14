@@ -10,7 +10,13 @@ import lombok.NoArgsConstructor;
 import java.util.UUID;
 
 @Entity
-@Table(name = "user_notifications")
+@Table(
+        name = "user_notifications",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uq_user_notifications_user_notification",
+                columnNames = {"user_id", "notification_id"}
+        )
+)
 @AllArgsConstructor @NoArgsConstructor
 @Getter
 public class UserNotificationEntity extends BaseEntity {

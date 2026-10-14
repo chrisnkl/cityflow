@@ -4,17 +4,17 @@ import com.chrisnkl.cfbackend.application.port.out.report.*;
 import com.chrisnkl.cfbackend.application.command.report.PageCommand;
 import com.chrisnkl.cfbackend.application.result.pagination.PageResult;
 import com.chrisnkl.cfbackend.application.result.report.GetCategoriesResult;
-import com.chrisnkl.cfbackend.domain.enums.EventType;
-import com.chrisnkl.cfbackend.domain.event.ReportCreatedEvent;
 import com.chrisnkl.cfbackend.domain.exception.HttpBackendException;
 import com.chrisnkl.cfbackend.domain.model.report.Category;
 import com.chrisnkl.cfbackend.domain.model.report.Report;
 import com.chrisnkl.cfbackend.infrastructure.persistence.entity.auth.UserEntity;
+import com.chrisnkl.cfbackend.infrastructure.persistence.entity.notification.NotificationEntity;
 import com.chrisnkl.cfbackend.infrastructure.persistence.entity.report.CategoryEntity;
 import com.chrisnkl.cfbackend.infrastructure.persistence.entity.report.ReportEntity;
 import com.chrisnkl.cfbackend.infrastructure.persistence.mapper.CategoryPersistenceMapper;
 import com.chrisnkl.cfbackend.infrastructure.persistence.mapper.ReportPersistenceMapper;
 import com.chrisnkl.cfbackend.infrastructure.persistence.repository.JpaCategoryRepository;
+import com.chrisnkl.cfbackend.infrastructure.persistence.repository.JpaNotificationRepository;
 import com.chrisnkl.cfbackend.infrastructure.persistence.repository.JpaReportRepository;
 import com.chrisnkl.cfbackend.infrastructure.persistence.repository.JpaUserRepository;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +24,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Repository
@@ -33,7 +34,7 @@ public class JpaReportAdapter implements FindNearbyReportsPort, CreateReportPort
     private final JpaReportRepository reportRepository;
     private final JpaCategoryRepository categoryRepository;
     private final JpaUserRepository userRepository;
-
+    private final JpaNotificationRepository notificationRepository;
 
     private final ReportPersistenceMapper reportPersistenceMapper;
     private final CategoryPersistenceMapper categoryPersistenceMapper;
@@ -51,7 +52,7 @@ public class JpaReportAdapter implements FindNearbyReportsPort, CreateReportPort
         entity.setCreatedBy(createdBy);
 
         ReportEntity savedReport = reportRepository.save(entity);
-
+        notificationRepository.save(new NotificationEntity(null, savedReport, Set.of()));
         return savedReport.getId();
     }
 

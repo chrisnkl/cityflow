@@ -110,3 +110,6 @@ CREATE INDEX idx_reports_category ON reports(category_id);
 CREATE INDEX idx_reports_status ON reports(status);
 CREATE INDEX idx_user_notifications_user ON user_notifications(user_id);
 CREATE INDEX idx_user_notifications_read ON user_notifications(user_id, is_read);
+
+CREATE UNIQUE INDEX uq_user_notifications_user_notification
+    ON user_notifications (user_id, notification_id);

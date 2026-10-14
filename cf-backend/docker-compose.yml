@@ -13,12 +13,6 @@ services:
     volumes:
         - cf-database-data:/var/lib/postgresql/data
 
-  kafka:
-    image: apache/kafka:4.0.1
-    container_name: cf-backend-kafka
-    ports:
-      - "9092:9092"
-
   sonarqube:
     image: sonarqube:26.9.0.129388-community
     container_name: cf-backend-sonarqube
