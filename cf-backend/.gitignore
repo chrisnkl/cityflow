@@ -34,3 +34,5 @@ build/
 
 __azurite_**
 Azurite
+__blobstorage__
+__queuestorage__
