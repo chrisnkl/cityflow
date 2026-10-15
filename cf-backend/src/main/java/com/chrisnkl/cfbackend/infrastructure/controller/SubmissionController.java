@@ -62,6 +62,7 @@ public class SubmissionController {
         boolean canViewAll = authentication.getAuthorities().stream().anyMatch(authority -> Objects.equals(authority.getAuthority(), PermissionCode.VIEW_ALL_REPORTS.name()));
 
         if (!canViewAll && (email != null && !email.isBlank()) && !authentication.getName().equalsIgnoreCase(email)) throw new AccessDeniedException("User " + authentication.getName() + " tried accessing another user's reports.");
+        if (!canViewAll && (email == null || email.isBlank())) email = authentication.getName();
 
         PageResult<Report> reports = getReportsUseCase.getReports(
                 email,
