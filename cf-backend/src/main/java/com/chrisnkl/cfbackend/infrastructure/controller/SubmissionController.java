@@ -17,6 +17,7 @@ import com.chrisnkl.cfbackend.infrastructure.dto.request.report.ReviewReportRequ
 import com.chrisnkl.cfbackend.infrastructure.dto.response.report.ReportPageResponse;
 import com.chrisnkl.cfbackend.infrastructure.mapper.CreateReportCommandMapper;
 import com.chrisnkl.cfbackend.infrastructure.mapper.ReportResponseMapper;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import lombok.RequiredArgsConstructor;
@@ -49,7 +50,7 @@ public class SubmissionController {
     private final CreateReportCommandMapper createReportCommandMapper;
 
     @GetMapping
-    @PreAuthorize("hasAuthority('VIEW_ALL_REPORTS') or hasAuthority('VIEW_OWN_REPORTS')")
+    @PreAuthorize("hasAuthority('VIEW_ALL_REPORTS')")
     public ResponseEntity<ApiResponse<ReportPageResponse>> getReports(
             @RequestParam @DecimalMin("-90.0") @DecimalMax("90.0") double latitude,
             @RequestParam @DecimalMin("-180.0") @DecimalMax("180.0") double longitude,
@@ -78,6 +79,7 @@ public class SubmissionController {
 
     @PostMapping
     @PreAuthorize("hasAuthority('REPORT_ISSUE')")
+    @RateLimiter(name = "createReportRateLimiter")
     public ResponseEntity<ApiResponse<CreateReportResult>> createReport(
             @Valid @RequestPart("report") CreateReportRequest request,
             @RequestPart(value = "photo", required = false) MultipartFile photo,
@@ -99,13 +101,12 @@ public class SubmissionController {
     }
 
     @PostMapping("/validation")
-    @PreAuthorize("(#p0.validationAction == T(com.chrisnkl.cfbackend.domain.enums.ValidationAction).VALIDATE and hasAuthority('VALIDATE_REPORT')) or (#p0.validationAction == T(com.chrisnkl.cfbackend.domain.enums.ValidationAction).REJECT and hasAuthority('REJECT_REPORT'))")
+    @PreAuthorize("hasAuthority('VALIDATE_REPORT') or hasAuthority('REJECT_REPORT')")
     public ResponseEntity<ApiResponse<Void>> reviewReport(
             @Valid @RequestBody ReviewReportRequest request
     ) {
         reviewReportUseCase.reviewReport(new ReviewReportCommand(
                 request.reportId(),
-                request.validationAction(),
                 request.status()
         ));
         return ResponseEntity.ok(ApiResponse.success("Report review action completed"));

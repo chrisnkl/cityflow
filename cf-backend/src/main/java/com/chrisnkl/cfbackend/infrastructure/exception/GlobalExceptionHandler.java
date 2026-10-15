@@ -35,5 +35,16 @@ public class GlobalExceptionHandler {
         return ResponseEntity.internalServerError().body(problemDetail);
     }
 
+    @ExceptionHandler(io.github.resilience4j.ratelimiter.RequestNotPermitted.class)
+    public ResponseEntity<ProblemDetail> catchRateLimitException(io.github.resilience4j.ratelimiter.RequestNotPermitted e) {
+
+        HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
+        ProblemDetail problemDetail = ProblemDetail.forStatus(status);
+        problemDetail.setTitle(status.getReasonPhrase());
+        problemDetail.setDetail("Too many requests. Rate limit exceeded. Please try again later.");
+
+        return ResponseEntity.status(status).body(problemDetail);
+    }
+
 
 }

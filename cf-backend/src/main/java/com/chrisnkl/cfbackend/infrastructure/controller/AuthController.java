@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -23,6 +24,7 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/login")
+    @RateLimiter(name = "authRateLimiter")
     public ResponseEntity<ApiResponse<AuthResponse>> login(@RequestBody @Valid AuthRequest request) {
         log.info("Attempting login for user: {}", request.email());
         AuthResponse response = authService.login(request);
@@ -30,6 +32,7 @@ public class AuthController {
     }
 
     @PostMapping("/register")
+    @RateLimiter(name = "authRateLimiter")
     public ResponseEntity<ApiResponse<AuthResponse>> register(@RequestBody @Valid AuthRequest request) {
         log.info("Attempting registration for user: {}", request.email());
         AuthResponse response = authService.register(request);
