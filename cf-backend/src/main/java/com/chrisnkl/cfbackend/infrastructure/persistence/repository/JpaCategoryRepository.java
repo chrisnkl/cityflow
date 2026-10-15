@@ -14,4 +14,8 @@ public interface JpaCategoryRepository extends JpaRepository<CategoryEntity, UUI
     Optional<CategoryEntity> findByIdAndEnabledTrue(UUID id);
 
     List<CategoryEntity> findByEnabledAndRadiusLessThanEqual(boolean enabled, double radius);
+
+    boolean existsByName(String name);
+
+    boolean existsByNameAndIdNot(String name, UUID id);
 }

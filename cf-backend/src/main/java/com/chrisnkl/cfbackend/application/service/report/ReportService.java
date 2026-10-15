@@ -15,36 +15,42 @@ import com.chrisnkl.cfbackend.application.port.out.report.ManageReportPort;
 import com.chrisnkl.cfbackend.application.port.out.report.ReportImageStoragePort;
 import com.chrisnkl.cfbackend.application.result.report.CreateReportResult;
 import com.chrisnkl.cfbackend.application.result.report.ReportImageResult;
-import com.chrisnkl.cfbackend.domain.enums.ValidationAction;
 import com.chrisnkl.cfbackend.domain.exception.HttpBackendException;
 import com.chrisnkl.cfbackend.domain.model.auth.User;
 import com.chrisnkl.cfbackend.domain.model.report.Category;
 import com.chrisnkl.cfbackend.domain.model.report.Report;
 import com.chrisnkl.cfbackend.domain.model.report.ReportStatus;
+import com.chrisnkl.cfbackend.application.command.report.GetUserStatsCommand;
+import com.chrisnkl.cfbackend.application.port.in.report.GetUserStatsUseCase;
+import com.chrisnkl.cfbackend.application.port.out.report.GetUserStatsPort;
+import com.chrisnkl.cfbackend.application.result.report.UserStatsResult;
 import org.springframework.http.HttpStatus;
 
 import java.util.UUID;
 
-public class ReportService implements CreateReportUseCase, GetReportsUseCase, GetReportImageUseCase, ReviewReportUseCase {
+public class ReportService implements CreateReportUseCase, GetReportsUseCase, GetReportImageUseCase, ReviewReportUseCase, GetUserStatsUseCase {
 
     private final FindNearbyReportsPort findNearbyReportsPort;
     private final CreateReportPort createReportPort;
     private final ReportImageStoragePort reportImageStoragePort;
     private final FindReportPort findReportPort;
     private final ManageReportPort manageReportPort;
+    private final GetUserStatsPort getUserStatsPort;
 
     public ReportService(
             FindNearbyReportsPort findNearbyReportsPort,
             CreateReportPort createReportPort,
             ReportImageStoragePort reportImageStoragePort,
             FindReportPort findReportPort,
-            ManageReportPort manageReportPort
+            ManageReportPort manageReportPort,
+            GetUserStatsPort getUserStatsPort
     ) {
         this.findNearbyReportsPort = findNearbyReportsPort;
         this.createReportPort = createReportPort;
         this.reportImageStoragePort = reportImageStoragePort;
         this.findReportPort = findReportPort;
         this.manageReportPort = manageReportPort;
+        this.getUserStatsPort = getUserStatsPort;
     }
 
     @Override
@@ -117,19 +123,26 @@ public class ReportService implements CreateReportUseCase, GetReportsUseCase, Ge
 
     @Override
     public void reviewReport(ReviewReportCommand command) {
-        if (command.validationAction() == ValidationAction.VALIDATE) {
-            if (command.status() == null || command.status() == ReportStatus.REJECTED) {
-                throw new HttpBackendException(HttpStatus.BAD_REQUEST.value(),
-                        "A valid non-rejected report status is required.");
-            }
-            manageReportPort.updateStatus(command.reportId(), command.status());
-            return;
+        if (command.status() == null) {
+            throw new HttpBackendException(HttpStatus.BAD_REQUEST.value(), "Report status is required.");
         }
-        if (command.validationAction() == ValidationAction.REJECT) {
-            manageReportPort.deleteReport(command.reportId());
-            return;
+        Report report = findReportPort.findById(command.reportId())
+                .orElseThrow(() -> new HttpBackendException(HttpStatus.NOT_FOUND.value(), "Report not found."));
+
+        if (report.getStatus() != null && report.getStatus().isFinal()) {
+            throw new HttpBackendException(HttpStatus.BAD_REQUEST.value(),
+                    "Cannot update report status because it is already finalized.");
         }
-        throw new HttpBackendException(HttpStatus.BAD_REQUEST.value(), "Validation action is required.");
+
+        manageReportPort.updateStatus(command.reportId(), command.status());
+    }
+
+    @Override
+    public UserStatsResult getUserStats(GetUserStatsCommand command) {
+        if (command == null || command.userEmail() == null || command.userEmail().isBlank()) {
+            throw new HttpBackendException(HttpStatus.UNAUTHORIZED.value(), "An authenticated user is required.");
+        }
+        return getUserStatsPort.getUserStats(command);
     }
 
     private void validateImage(byte[] imageBytes, String contentType) {

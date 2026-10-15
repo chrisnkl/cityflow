@@ -12,6 +12,8 @@ public interface CategoryResponseMapper {
 
     List<CategoryResponse> toCategoryResponse(List<Category> categories);
 
+    CategoryResponse toCategoryResponse(Category category);
+
     default List<CategoryResponse> toCategoryResponse(GetCategoriesResult result) {
         return toCategoryResponse(result.categories());
     }

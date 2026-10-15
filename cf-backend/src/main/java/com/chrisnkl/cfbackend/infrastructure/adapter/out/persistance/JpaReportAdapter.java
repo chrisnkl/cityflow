@@ -17,6 +17,7 @@ import com.chrisnkl.cfbackend.infrastructure.persistence.mapper.ReportPersistenc
 import com.chrisnkl.cfbackend.infrastructure.persistence.repository.JpaCategoryRepository;
 import com.chrisnkl.cfbackend.infrastructure.persistence.repository.JpaNotificationRepository;
 import com.chrisnkl.cfbackend.infrastructure.persistence.repository.JpaReportRepository;
+import com.chrisnkl.cfbackend.infrastructure.persistence.repository.JpaUserNotificationRepository;
 import com.chrisnkl.cfbackend.infrastructure.persistence.repository.JpaUserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -28,15 +29,25 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import com.chrisnkl.cfbackend.application.command.report.GetUserStatsCommand;
+import com.chrisnkl.cfbackend.application.result.report.UserStatsResult;
+import jakarta.persistence.criteria.Predicate;
+import org.springframework.data.jpa.domain.Specification;
+
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
+
 @Repository
 @RequiredArgsConstructor
 public class JpaReportAdapter implements FindNearbyReportsPort, CreateReportPort, GetCategoriesPort, FindReportPort,
-        ManageReportPort {
+        ManageReportPort, GetUserStatsPort {
 
     private final JpaReportRepository reportRepository;
     private final JpaCategoryRepository categoryRepository;
     private final JpaUserRepository userRepository;
     private final JpaNotificationRepository notificationRepository;
+    private final JpaUserNotificationRepository userNotificationRepository;
 
     private final ReportPersistenceMapper reportPersistenceMapper;
     private final CategoryPersistenceMapper categoryPersistenceMapper;
@@ -110,5 +121,106 @@ public class JpaReportAdapter implements FindNearbyReportsPort, CreateReportPort
         List<Category> categories = categoryPersistenceMapper.toDomain(results);
 
         return new GetCategoriesResult(categories);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public UserStatsResult getUserStats(GetUserStatsCommand command) {
+        String email = command.userEmail();
+
+        Specification<ReportEntity> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            // User filter: reports submitted by the user
+            predicates.add(cb.equal(cb.lower(root.get("createdBy").get("email")), email.toLowerCase()));
+
+            // Time filter
+            if (command.timeFilter() != null && !command.timeFilter().isBlank()) {
+                Instant cutoff = calculateCutoff(command.timeFilter().trim().toLowerCase());
+                if (cutoff != null) {
+                    predicates.add(cb.greaterThanOrEqualTo(root.get("createdAt"), cutoff));
+                }
+            }
+
+            // Category filter
+            if (command.categoryId() != null) {
+                predicates.add(cb.equal(root.get("category").get("id"), command.categoryId()));
+            }
+
+            // Status filter
+            if (command.status() != null && !command.status().isBlank() && !"ALL".equalsIgnoreCase(command.status())) {
+                try {
+                    ReportStatus statusEnum = ReportStatus.valueOf(command.status().trim().toUpperCase());
+                    predicates.add(cb.equal(root.get("status"), statusEnum));
+                } catch (IllegalArgumentException ignored) {
+                    // If unknown status passed, query yields empty or matches no status
+                    predicates.add(cb.disjunction());
+                }
+            }
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        List<ReportEntity> reports = reportRepository.findAll(spec);
+
+        long totalSubmitted = reports.size();
+
+        // Validated means reports that municipal employees acted upon (UNDER_INVESTIGATION, IN_PROGRESS, RESOLVED)
+        long totalValidated = reports.stream()
+                .filter(r -> r.getStatus() == ReportStatus.UNDER_INVESTIGATION
+                        || r.getStatus() == ReportStatus.IN_PROGRESS
+                        || r.getStatus() == ReportStatus.RESOLVED)
+                .count();
+
+        // Total notifications received by user
+        long totalNotifications = userNotificationRepository.countByUser_Email(email);
+
+        // Status breakdown initialized with all standard statuses
+        Map<String, Long> statusBreakdown = new LinkedHashMap<>();
+        for (ReportStatus status : ReportStatus.values()) {
+            statusBreakdown.put(status.name(), 0L);
+        }
+        for (ReportEntity report : reports) {
+            if (report.getStatus() != null) {
+                statusBreakdown.computeIfPresent(report.getStatus().name(), (k, v) -> v + 1);
+            }
+        }
+
+        // Top categories
+        Map<String, Long> categoryCountMap = new HashMap<>();
+        for (ReportEntity report : reports) {
+            String catName = report.getCategory() != null ? report.getCategory().getName() : "Other";
+            categoryCountMap.put(catName, categoryCountMap.getOrDefault(catName, 0L) + 1L);
+        }
+
+        List<UserStatsResult.CategoryStat> topCategories = categoryCountMap.entrySet().stream()
+                .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
+                .limit(5)
+                .map(entry -> {
+                    double percentage = totalSubmitted > 0
+                            ? Math.round((entry.getValue() * 100.0 / totalSubmitted) * 10.0) / 10.0
+                            : 0.0;
+                    return new UserStatsResult.CategoryStat(entry.getKey(), entry.getValue(), percentage);
+                })
+                .toList();
+
+        return new UserStatsResult(
+                totalSubmitted,
+                totalValidated,
+                totalNotifications,
+                topCategories,
+                statusBreakdown
+        );
+    }
+
+    private Instant calculateCutoff(String filter) {
+        Instant now = Instant.now();
+        return switch (filter) {
+            case "today" -> now.minus(1, ChronoUnit.DAYS);
+            case "week" -> now.minus(7, ChronoUnit.DAYS);
+            case "month" -> now.minus(30, ChronoUnit.DAYS);
+            case "year" -> now.minus(365, ChronoUnit.DAYS);
+            default -> null; // "all" or unspecified
+        };
     }
 }

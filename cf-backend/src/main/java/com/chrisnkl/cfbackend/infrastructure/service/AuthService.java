@@ -1,11 +1,15 @@
 package com.chrisnkl.cfbackend.infrastructure.service;
 
+import com.chrisnkl.cfbackend.domain.exception.auth.FailedRegistrationException;
 import com.chrisnkl.cfbackend.domain.exception.auth.UserAlreadyExistsException;
+import com.chrisnkl.cfbackend.domain.model.auth.Role;
 import com.chrisnkl.cfbackend.infrastructure.dto.request.auth.AuthRequest;
 import com.chrisnkl.cfbackend.infrastructure.dto.request.auth.RefreshTokenRequest;
 import com.chrisnkl.cfbackend.infrastructure.dto.response.auth.AuthResponse;
 import com.chrisnkl.cfbackend.infrastructure.helper.JwtHelper;
+import com.chrisnkl.cfbackend.infrastructure.persistence.entity.auth.RoleEntity;
 import com.chrisnkl.cfbackend.infrastructure.persistence.entity.auth.UserEntity;
+import com.chrisnkl.cfbackend.infrastructure.persistence.repository.JpaRoleRepository;
 import com.chrisnkl.cfbackend.infrastructure.persistence.repository.JpaUserRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
@@ -24,6 +28,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -35,7 +40,10 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final UserDetailsService userDetailsService;
     private final JpaUserRepository userRepository;
+    private final JpaRoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+
+    private final static UUID ROLE_USER_ID = UUID.fromString("10000000-0000-0000-0000-000000000003");
 
     public AuthResponse login(AuthRequest authRequest) {
         log.info("AuthService.login received login request with email: {}", authRequest.email());
@@ -66,9 +74,12 @@ public class AuthService {
             throw new UserAlreadyExistsException("Email is already registered");
         }
 
+        RoleEntity userRole = roleRepository.findById(ROLE_USER_ID).orElseThrow(() -> new FailedRegistrationException("Failed to find default user role."));
+
         UserEntity newUser = UserEntity.builder()
                 .email(authRequest.email())
                 .password(passwordEncoder.encode(authRequest.password()))
+                .roles(Set.of(userRole))
                 .build();
 
         userRepository.save(newUser);

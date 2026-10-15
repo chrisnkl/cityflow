@@ -6,6 +6,9 @@ public enum ReportStatus {
     UNDER_INVESTIGATION,
     IN_PROGRESS,
     REJECTED,
-    RESOLVED
+    RESOLVED;
 
+    public boolean isFinal() {
+        return this == REJECTED || this == RESOLVED;
+    }
 }

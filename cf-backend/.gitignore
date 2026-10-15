@@ -33,6 +33,6 @@ build/
 .vscode/
 
 __azurite_**
-Azurite
+Azurite**
 __blobstorage__
 __queuestorage__

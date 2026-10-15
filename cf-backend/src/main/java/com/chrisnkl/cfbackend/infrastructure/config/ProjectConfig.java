@@ -5,6 +5,7 @@ import com.chrisnkl.cfbackend.application.port.out.report.CreateReportPort;
 import com.chrisnkl.cfbackend.application.port.out.report.GetCategoriesPort;
 import com.chrisnkl.cfbackend.application.port.out.report.ReportImageStoragePort;
 import com.chrisnkl.cfbackend.application.port.out.report.FindReportPort;
+import com.chrisnkl.cfbackend.application.port.out.report.ManageCategoryPort;
 import com.chrisnkl.cfbackend.application.port.out.report.ManageReportPort;
 import com.chrisnkl.cfbackend.application.service.report.CategoryService;
 import com.chrisnkl.cfbackend.application.service.notification.NotificationService;
@@ -32,15 +33,16 @@ public class ProjectConfig implements WebMvcConfigurer {
             CreateReportPort createReportPort,
             ReportImageStoragePort reportImageStoragePort,
             FindReportPort findReportPort,
-            ManageReportPort manageReportPort
+            ManageReportPort manageReportPort,
+            com.chrisnkl.cfbackend.application.port.out.report.GetUserStatsPort getUserStatsPort
     ) {
         return new ReportService(findNearbyReportsPort, createReportPort, reportImageStoragePort, findReportPort,
-                manageReportPort);
+                manageReportPort, getUserStatsPort);
     }
 
     @Bean
-    public CategoryService categoryService(GetCategoriesPort getCategoriesPort) {
-        return new CategoryService(getCategoriesPort);
+    public CategoryService categoryService(GetCategoriesPort getCategoriesPort, ManageCategoryPort manageCategoryPort) {
+        return new CategoryService(getCategoriesPort, manageCategoryPort);
     }
 
     @Bean
@@ -49,6 +51,13 @@ public class ProjectConfig implements WebMvcConfigurer {
             ManageUserNotificationsPort manageUserNotificationsPort
     ) {
         return new NotificationService(findAndSaveNearbyNotificationsPort, manageUserNotificationsPort);
+    }
+
+    @Bean
+    public com.chrisnkl.cfbackend.application.service.report.SystemParametersService systemParametersService(
+            com.chrisnkl.cfbackend.application.port.out.report.ManageSystemParametersPort manageSystemParametersPort
+    ) {
+        return new com.chrisnkl.cfbackend.application.service.report.SystemParametersService(manageSystemParametersPort);
     }
 
 }

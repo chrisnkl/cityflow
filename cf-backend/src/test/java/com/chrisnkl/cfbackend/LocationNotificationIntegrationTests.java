@@ -4,7 +4,6 @@ import com.chrisnkl.cfbackend.application.result.notification.ReportNotification
 import com.chrisnkl.cfbackend.application.command.report.ReviewReportCommand;
 import com.chrisnkl.cfbackend.application.port.in.report.ReviewReportUseCase;
 import com.chrisnkl.cfbackend.domain.exception.HttpBackendException;
-import com.chrisnkl.cfbackend.domain.enums.ValidationAction;
 import com.chrisnkl.cfbackend.domain.model.report.Category;
 import com.chrisnkl.cfbackend.domain.model.report.Report;
 import com.chrisnkl.cfbackend.domain.model.report.ReportStatus;
@@ -147,7 +146,7 @@ class LocationNotificationIntegrationTests {
     }
 
     @Test
-    void validationActionUpdatesReportStatus() {
+    void reviewingReportUpdatesReportStatus() {
         UserEntity owner = user("validation-owner@example.com");
         CategoryEntity category = categoryRepository.save(category());
         UUID reportId = UUID.randomUUID();
@@ -161,13 +160,13 @@ class LocationNotificationIntegrationTests {
                 .build());
 
         reviewReportUseCase.reviewReport(new ReviewReportCommand(
-                reportId, ValidationAction.VALIDATE, ReportStatus.IN_PROGRESS));
+                reportId, ReportStatus.IN_PROGRESS));
 
         assertEquals(ReportStatus.IN_PROGRESS, reportRepository.findById(reportId).orElseThrow().getStatus());
     }
 
     @Test
-    void rejectActionDeletesReportAndItsNotification() {
+    void rejectingReportUpdatesStatusToRejected() {
         UserEntity owner = user("rejection-owner@example.com");
         CategoryEntity category = categoryRepository.save(category());
         UUID reportId = UUID.randomUUID();
@@ -179,19 +178,32 @@ class LocationNotificationIntegrationTests {
                 .longitude(23.7275)
                 .createdBy(User.builder().email(owner.getEmail()).build())
                 .build());
-        NotificationEntity notification = notificationRepository.findByReport_Id(reportId).orElseThrow();
-        UserNotificationEntity userNotification = userNotificationRepository.save(
-                new UserNotificationEntity(null, notification, owner, false));
-        UUID userNotificationId = userNotification.getId();
-        entityManager.flush();
-        entityManager.clear();
 
         reviewReportUseCase.reviewReport(new ReviewReportCommand(
-                reportId, ValidationAction.REJECT, null));
+                reportId, ReportStatus.REJECTED));
 
-        assertFalse(reportRepository.existsById(reportId));
-        assertFalse(notificationRepository.findByReport_Id(reportId).isPresent());
-        assertFalse(userNotificationRepository.existsById(userNotificationId));
+        assertEquals(ReportStatus.REJECTED, reportRepository.findById(reportId).orElseThrow().getStatus());
+    }
+
+    @Test
+    void reviewingReportWhenStatusAlreadyFinalThrowsException() {
+        UserEntity owner = user("finalized-report-owner@example.com");
+        CategoryEntity category = categoryRepository.save(category());
+        UUID reportId = UUID.randomUUID();
+        reportAdapter.createReport(Report.builder()
+                .id(reportId)
+                .category(Category.builder().id(category.getId()).build())
+                .status(ReportStatus.RESOLVED)
+                .latitude(37.9838)
+                .longitude(23.7275)
+                .createdBy(User.builder().email(owner.getEmail()).build())
+                .build());
+
+        HttpBackendException exception = assertThrows(HttpBackendException.class,
+                () -> reviewReportUseCase.reviewReport(new ReviewReportCommand(reportId, ReportStatus.IN_PROGRESS)));
+
+        assertEquals(400, exception.getStatus());
+        assertEquals("Cannot update report status because it is already finalized.", exception.getMessage());
     }
 
     private UserEntity user(String email) {

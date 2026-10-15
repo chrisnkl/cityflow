@@ -59,4 +59,6 @@ public interface JpaUserNotificationRepository extends JpaRepository<UserNotific
               AND userNotification.read = FALSE
             """)
     int markAllReadForUser(@Param("email") String email);
+
+    long countByUser_Email(String email);
 }

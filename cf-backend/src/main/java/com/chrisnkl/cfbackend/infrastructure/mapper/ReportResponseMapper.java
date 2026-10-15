@@ -13,7 +13,8 @@ public interface ReportResponseMapper {
     ReportPageResponse toPageResponse(PageResult<Report> page);
 
     @Mapping(target = "categoryId", source = "category.id")
-    @Mapping(target = "categoryName", source = "category.name")
+    @Mapping(target = "category", source = "category.name")
     @Mapping(target = "photoUrl", expression = "java(report.getPhotoUrl() == null ? null : \"/api/v1/secure/submission/\" + report.getId() + \"/photo\")")
+    @Mapping(target = "createdBy", source = "createdBy.email")
     ReportResponse toResponse(Report report);
 }

@@ -8,13 +8,14 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.UUID;
 
 @Repository
-public interface JpaReportRepository extends JpaRepository<ReportEntity, UUID> {
+public interface JpaReportRepository extends JpaRepository<ReportEntity, UUID>, JpaSpecificationExecutor<ReportEntity> {
 
     @Query(
             value = """
@@ -74,4 +75,6 @@ public interface JpaReportRepository extends JpaRepository<ReportEntity, UUID> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT report FROM ReportEntity report WHERE report.id = :reportId")
     java.util.Optional<ReportEntity> findByIdForNotificationUpdate(@Param("reportId") UUID reportId);
+
+    boolean existsByCategoryId(UUID categoryId);
 }
