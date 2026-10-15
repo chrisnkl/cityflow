@@ -50,7 +50,7 @@ public class SubmissionController {
     private final CreateReportCommandMapper createReportCommandMapper;
 
     @GetMapping
-    @PreAuthorize("hasAuthority('VIEW_ALL_REPORTS')")
+    @PreAuthorize("hasAuthority('VIEW_ALL_REPORTS') or hasAuthority('REPORT_ISSUE')")
     public ResponseEntity<ApiResponse<ReportPageResponse>> getReports(
             @RequestParam @DecimalMin("-90.0") @DecimalMax("90.0") double latitude,
             @RequestParam @DecimalMin("-180.0") @DecimalMax("180.0") double longitude,
@@ -63,7 +63,9 @@ public class SubmissionController {
         boolean canViewAll = authentication.getAuthorities().stream().anyMatch(authority -> Objects.equals(authority.getAuthority(), PermissionCode.VIEW_ALL_REPORTS.name()));
 
         if (!canViewAll && (email != null && !email.isBlank()) && !authentication.getName().equalsIgnoreCase(email)) throw new AccessDeniedException("User " + authentication.getName() + " tried accessing another user's reports.");
-        if (!canViewAll && (email == null || email.isBlank())) email = authentication.getName();
+
+        // If the user doesn't have permission to view all the reports, then show his own
+        if (!canViewAll) email = authentication.getName();
 
         PageResult<Report> reports = getReportsUseCase.getReports(
                 email,
